@@ -3,10 +3,13 @@ package com.goura.system.parkinglot.controller;
 import com.goura.system.parkinglot.core.ParkingLotManager;
 import com.goura.system.parkinglot.core.ParkingToken;
 import com.goura.system.parkinglot.exception.NotAvailableException;
+import com.goura.system.parkinglot.exception.PaymentGatewayException;
 import com.goura.system.parkinglot.exception.TokenNotFoundException;
 import com.goura.system.parkinglot.model.CheckinInfo;
 import com.goura.system.parkinglot.model.ParkingLot;
 import com.goura.system.parkinglot.model.ParkingLotNumbers;
+import com.goura.system.parkinglot.model.ParkingReceipt;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -21,7 +24,8 @@ import javax.validation.constraints.NotNull;
 @RestController
 @Validated
 public class ParkingLotController {
-    private final ParkingLotManager manager = ParkingLotManager.getInstance();
+    @Autowired
+    private ParkingLotManager manager;
 
     @GetMapping("/capacity")
     public ParkingLotNumbers getCapacity() {
@@ -45,6 +49,12 @@ public class ParkingLotController {
         return manager.reserve(checkin);
     }
 
+    @PostMapping("/token/{tokenId}/release")
+    public ParkingReceipt releaseParkingLot(
+            @PathVariable @NotNull @NotEmpty String tokenId) throws Exception {
+        return manager.releaseParkingLot(tokenId);
+    }
+
     @ExceptionHandler(NotAvailableException.class)
     public ResponseEntity handleNotAvailableException(NotAvailableException e) {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.SERVICE_UNAVAILABLE);
@@ -63,6 +73,11 @@ public class ParkingLotController {
     @ExceptionHandler({HttpMessageNotReadableException.class, IllegalArgumentException.class})
     public ResponseEntity handleInvalidArguments(Exception e) {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity handlePaymentGatewayException(PaymentGatewayException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(Exception.class)

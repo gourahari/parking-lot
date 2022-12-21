@@ -7,19 +7,27 @@ import com.goura.system.parkinglot.exception.TokenNotFoundException;
 import com.goura.system.parkinglot.model.CheckinInfo;
 import com.goura.system.parkinglot.model.ParkingLot;
 import com.goura.system.parkinglot.model.ParkingLotNumbers;
+import com.goura.system.parkinglot.model.ParkingReceipt;
 import com.goura.system.parkinglot.model.impl.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Component
 public class ParkingLotManager {
-    private static final ParkingLotManager INSTANCE = new ParkingLotManager();
+    private static final String CHECKOUT_MSG_FREE = "Free parking for less than 5 minutes!";
+    private static final String CHECKOUT_MSG = "Thank You! Please visit again.";
     private List<ParkingLot> compactLots, handicappedLots, largeLots, motorcycleLots;
     private Map<ParkingToken, ParkingLot> occupiedLots = new HashMap<>();
     private ParkingLotConfig config;
     private Capacity capacity;
 
+    @Autowired
+    private PaymentService paymentService;
     private final class Capacity {
         private ParkingLotConfig config;
         private int totalCapacity;
@@ -62,12 +70,6 @@ public class ParkingLotManager {
         public int getMotorcycleCapacity() {
             return motorcycleCapacity;
         }
-    }
-    private ParkingLotManager() {
-    }
-
-    public static ParkingLotManager getInstance() {
-        return INSTANCE;
     }
 
     public void initialize(ParkingLotConfig config) {
@@ -112,10 +114,8 @@ public class ParkingLotManager {
     }
 
     public ParkingToken getParkingToken(String tokenId) throws Exception {
-        ParkingToken token = new ParkingToken(tokenId);
-        if (!occupiedLots.containsKey(token)) {
-            throw new TokenNotFoundException("Provided token not found in the system!");
-        }
+        // Check if tokenId is valid
+        ParkingToken token = validate(tokenId);
         return occupiedLots.keySet().stream()
                 .filter(e -> e.equals(token))
                 .findFirst()
@@ -135,24 +135,8 @@ public class ParkingLotManager {
                                     .collect(Collectors.joining(", "))
             );
         };
-        List<ParkingLot> source = null;
+        List<ParkingLot> source = getParkingCacheByLotType(lotType);
         ParkingToken token = null;
-        switch (lotType) {
-            case Large:
-                source = largeLots;
-                break;
-            case Compact:
-                source = compactLots;
-                break;
-            case Motorcycle:
-                source = motorcycleLots;
-                break;
-            case Handicapped:
-                source = handicappedLots;
-                break;
-            default:
-                throw new IllegalArgumentException("Wrong Parking Lot Type!");
-        }
         synchronized (source) {
             if (source.isEmpty()) {
                 throw new NotAvailableException("No parking Lot available for your vehicle type");
@@ -170,11 +154,90 @@ public class ParkingLotManager {
         return token;
     }
 
+    public ParkingReceipt releaseParkingLot(String tokenId) throws Exception {
+        // Check if tokenId is valid and get it.
+        ParkingToken token = getParkingToken(tokenId);
+
+        // Calculate payment
+        Date exitTime = new Date();
+        long duration = (exitTime.getTime() - token.getEntryTime().getTime()) / 1000;
+        ParkingReceipt receipt = null;
+
+        synchronized (token) {
+            // Check again if token is still valid.
+            validate(tokenId);
+            // Free parking for duration = less than 5 minutes.
+            receipt = new ParkingReceipt(token);
+            receipt.setExitTime(exitTime);
+            receipt.setDuration(calculateDuration(duration));
+            if (duration < TimeUnit.MINUTES.toSeconds(5)) {
+                receipt.setMessage(String.format("%s %s", CHECKOUT_MSG_FREE, CHECKOUT_MSG));
+            } else {
+                receipt.setMessage(CHECKOUT_MSG);
+                // Proceed for payment
+                double amount = calculatePayment(duration, occupiedLots.get(token));
+                receipt.setAmount(amount);
+
+                // Call payment service
+                String txnId = paymentService.processPayment(amount);
+                receipt.setTxnId(txnId);
+            }
+            // Release parking lot
+            List<ParkingLot> source = getParkingCacheByLotType(token.getType());
+            source.add(occupiedLots.remove(token));
+        }
+        return receipt;
+    }
+
+    private double calculatePayment(long duration, ParkingLot parkingLot) {
+        double charge = 0.0;
+        int numberOfHours = Double.valueOf(Math.ceil(duration*1.0 / 60)).intValue();
+        return numberOfHours * parkingLot.getCost();
+    }
+
+    /**
+     * @param duration - Duration in seconds
+     * @return
+     */
+    private String calculateDuration(long duration) {
+        int hours = new Double(duration / 3600).intValue();
+        duration %= 3600;
+        int minutes = new Double(duration / 60).intValue();
+        return String.format("%d hour(s) and %d minute(s)", hours, minutes);
+    }
+
+    private ParkingToken validate(String tokenId) throws Exception {
+        ParkingToken token = new ParkingToken(tokenId);
+        if (!occupiedLots.containsKey(token)) {
+            throw new TokenNotFoundException("Provided token not found in the system!");
+        }
+        return token;
+    }
+
     public static void main(String[] args) {
-        System.out.println(
-        IntStream.range(0, 10)
-                .mapToObj(String::valueOf)
-                .parallel()
-                .collect(Collectors.joining(",")));
+        long duration = 61;
+        int i = Double.valueOf(Math.ceil(duration*1.0 / 60)).intValue();
+        System.out.println(i);
+    }
+
+    private List<ParkingLot> getParkingCacheByLotType(ParkingLotType lotType) {
+        List<ParkingLot> source = null;
+        switch (lotType) {
+            case Large:
+                source = largeLots;
+                break;
+            case Compact:
+                source = compactLots;
+                break;
+            case Motorcycle:
+                source = motorcycleLots;
+                break;
+            case Handicapped:
+                source = handicappedLots;
+                break;
+            default:
+                throw new IllegalArgumentException("Wrong Parking Lot Type!");
+        }
+        return source;
     }
 }

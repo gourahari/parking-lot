@@ -1,5 +1,6 @@
 package com.goura.system.parkinglot.core;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goura.system.parkinglot.config.ParkingLotType;
 
@@ -12,6 +13,7 @@ public class ParkingToken {
     private ParkingLotType type;
     private String licensePlate;
     private String phoneNumber;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date entryTime;
     @JsonIgnore
     private String lotId;

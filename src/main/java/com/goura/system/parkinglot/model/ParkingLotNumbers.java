@@ -1,7 +1,10 @@
 package com.goura.system.parkinglot.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Locale;
 
 public class ParkingLotNumbers {
     private int total;
@@ -11,8 +14,9 @@ public class ParkingLotNumbers {
     private ParkingLotNumber motorcycle;
 
     private final class ParkingLotNumber {
-        int count;
-        String cost;
+        private int count;
+        @JsonFormat(pattern = "")
+        private String cost;
         private ParkingLotNumber(int count, double cost) {
             this.count = count;
             this.cost = NumberFormat.getCurrencyInstance().format(cost);

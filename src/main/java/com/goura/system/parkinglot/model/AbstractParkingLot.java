@@ -20,6 +20,11 @@ public class AbstractParkingLot implements ParkingLot {
     }
 
     @Override
+    public double getCost() {
+        return cost;
+    }
+
+    @Override
     public String toString() {
         return String.format(MSG, id, type);
     }
