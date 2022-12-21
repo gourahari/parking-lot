@@ -1,11 +1,31 @@
 package com.goura.system.parkinglot.model;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
 public class ParkingLotNumbers {
     private int total;
-    private int handicapped;
-    private int large;
-    private int compact;
-    private int motorcycle;
+    private ParkingLotNumber handicapped;
+    private ParkingLotNumber large;
+    private ParkingLotNumber compact;
+    private ParkingLotNumber motorcycle;
+
+    private final class ParkingLotNumber {
+        int count;
+        String cost;
+        private ParkingLotNumber(int count, double cost) {
+            this.count = count;
+            this.cost = NumberFormat.getCurrencyInstance().format(cost);
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public String  getCost() {
+            return cost;
+        }
+    }
 
     public int getTotal() {
         return total;
@@ -15,35 +35,35 @@ public class ParkingLotNumbers {
         this.total = total;
     }
 
-    public int getHandicapped() {
+    public ParkingLotNumber getHandicapped() {
         return handicapped;
     }
 
-    public void setHandicapped(int handicapped) {
-        this.handicapped = handicapped;
+    public void setHandicapped(int count, double cost) {
+        this.handicapped = new ParkingLotNumber(count, cost);
     }
 
-    public int getLarge() {
+    public ParkingLotNumber getLarge() {
         return large;
     }
 
-    public void setLarge(int large) {
-        this.large = large;
+    public void setLarge(int count, double cost) {
+        this.large = new ParkingLotNumber(count, cost);
     }
 
-    public int getCompact() {
+    public ParkingLotNumber getCompact() {
         return compact;
     }
 
-    public void setCompact(int compact) {
-        this.compact = compact;
+    public void setCompact(int count, double cost) {
+        this.compact = new ParkingLotNumber(count, cost);
     }
 
-    public int getMotorcycle() {
+    public ParkingLotNumber getMotorcycle() {
         return motorcycle;
     }
 
-    public void setMotorcycle(int motorcycle) {
-        this.motorcycle = motorcycle;
+    public void setMotorcycle(int count, double cost) {
+        this.motorcycle = new ParkingLotNumber(count, cost);
     }
 }

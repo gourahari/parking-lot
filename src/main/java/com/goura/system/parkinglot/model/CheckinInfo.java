@@ -1,13 +1,19 @@
 package com.goura.system.parkinglot.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 public class CheckinInfo {
-    @JsonProperty(required = true)
+    @NotNull(message = "licensePlate cannot be null!")
+    @NotEmpty(message = "licensePlate cannot be empty!")
     String licensePlate;
-    @JsonProperty(required = true)
+
+    @NotNull(message = "phoneNumber cannot be null!")
+    @NotEmpty(message = "phoneNumber cannot be empty!")
     String phoneNumber;
-    @JsonProperty(required = true)
+
+    @NotNull(message = "vehicleType cannot be null!")
+    @NotEmpty(message = "vehicleType cannot be empty!")
     String vehicleType;
 
     public String getLicensePlate() {
@@ -15,7 +21,7 @@ public class CheckinInfo {
     }
 
     public void setLicensePlate(String licensePlate) {
-        this.licensePlate = licensePlate;
+        this.licensePlate = licensePlate.trim();
     }
 
     public String getPhoneNumber() {
@@ -23,7 +29,7 @@ public class CheckinInfo {
     }
 
     public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+        this.phoneNumber = phoneNumber.trim();
     }
 
     public String getVehicleType() {
@@ -31,6 +37,6 @@ public class CheckinInfo {
     }
 
     public void setVehicleType(String vehicleType) {
-        this.vehicleType = vehicleType;
+        this.vehicleType = vehicleType.trim();
     }
 }
