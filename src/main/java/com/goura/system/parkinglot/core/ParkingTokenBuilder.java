@@ -2,6 +2,7 @@ package com.goura.system.parkinglot.core;
 
 import com.goura.system.parkinglot.config.ParkingLotType;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class ParkingTokenBuilder {
@@ -10,7 +11,7 @@ public class ParkingTokenBuilder {
     protected ParkingLotType type;
     protected String licensePlate;
     protected String phoneNumber;
-    protected Date entryTime;
+    protected LocalDateTime entryTime;
     protected String lotId;
 
     private ParkingTokenBuilder() {
@@ -37,7 +38,7 @@ public class ParkingTokenBuilder {
         return this;
     }
 
-    public ParkingTokenBuilder setEntryTime(Date entryTime) {
+    public ParkingTokenBuilder setEntryTime(LocalDateTime entryTime) {
         this.entryTime = entryTime;
         mask = mask | 8;
         return this;

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goura.system.parkinglot.config.ParkingLotType;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ public class ParkingToken {
     private String licensePlate;
     private String phoneNumber;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date entryTime;
+    private LocalDateTime entryTime;
     @JsonIgnore
     private String lotId;
 
@@ -51,7 +51,7 @@ public class ParkingToken {
         return phoneNumber;
     }
 
-    public Date getEntryTime() {
+    public LocalDateTime getEntryTime() {
         return entryTime;
     }
 

@@ -4,6 +4,7 @@ import com.goura.system.parkinglot.config.ParkingLotType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class ParkingTokenBuilderTest {
@@ -12,7 +13,7 @@ public class ParkingTokenBuilderTest {
     public void testBuildWithParkingLotIdMissing() {
         Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             ParkingToken token = ParkingTokenBuilder.create()
-                    .setEntryTime(new Date())
+                    .setEntryTime(LocalDateTime.now())
                     .setType(ParkingLotType.Large)
                     .setLicensePlate("ABC123")
                     .setPhoneNumber("1234567890")
@@ -25,7 +26,7 @@ public class ParkingTokenBuilderTest {
     public void testBuildWithParkingLotTypeMissing() {
         Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             ParkingToken token = ParkingTokenBuilder.create()
-                    .setEntryTime(new Date())
+                    .setEntryTime(LocalDateTime.now())
                     .setLicensePlate("ABC123")
                     .setPhoneNumber("1234567890")
                     .setLotId("123-456-789")
@@ -39,7 +40,7 @@ public class ParkingTokenBuilderTest {
         Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             ParkingToken token = ParkingTokenBuilder.create()
                     .setType(ParkingLotType.Motorcycle)
-                    .setEntryTime(new Date())
+                    .setEntryTime(LocalDateTime.now())
                     .setPhoneNumber("1234567890")
                     .setLotId("123-456-789")
                     .build();
@@ -52,7 +53,7 @@ public class ParkingTokenBuilderTest {
         Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             ParkingToken token = ParkingTokenBuilder.create()
                     .setType(ParkingLotType.Compact)
-                    .setEntryTime(new Date())
+                    .setEntryTime(LocalDateTime.now())
                     .setLicensePlate("ABC123")
                     .setLotId("123-456-789")
                     .build();
@@ -77,7 +78,7 @@ public class ParkingTokenBuilderTest {
     public void testBuild() {
         ParkingToken token = ParkingTokenBuilder.create()
                 .setType(ParkingLotType.Handicapped)
-                .setEntryTime(new Date())
+                .setEntryTime(LocalDateTime.now())
                 .setLicensePlate("ABC123")
                 .setPhoneNumber("1234567890")
                 .setLotId("123-456-789")

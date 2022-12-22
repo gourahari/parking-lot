@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.goura.system.parkinglot.core.ParkingToken;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -12,9 +13,9 @@ public class ParkingReceipt {
     private String phoneNumber;
     private String vehicleType;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date entryTime;
+    private LocalDateTime entryTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date exitTime;
+    private LocalDateTime exitTime;
     private String duration;
     private String message;
     private double amount;
@@ -43,19 +44,19 @@ public class ParkingReceipt {
         this.phoneNumber = phoneNumber;
     }
 
-    public Date getEntryTime() {
+    public LocalDateTime getEntryTime() {
         return entryTime;
     }
 
-    public void setEntryTime(Date entryTime) {
+    public void setEntryTime(LocalDateTime entryTime) {
         this.entryTime = entryTime;
     }
 
-    public Date getExitTime() {
+    public LocalDateTime getExitTime() {
         return exitTime;
     }
 
-    public void setExitTime(Date exitTime) {
+    public void setExitTime(LocalDateTime exitTime) {
         this.exitTime = exitTime;
     }
 

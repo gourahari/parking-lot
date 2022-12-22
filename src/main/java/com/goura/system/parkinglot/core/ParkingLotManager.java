@@ -12,8 +12,12 @@ import com.goura.system.parkinglot.model.impl.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -145,7 +149,7 @@ public class ParkingLotManager {
             token = ParkingTokenBuilder.create()
                     .setLicensePlate(info.getLicensePlate())
                     .setPhoneNumber(info.getPhoneNumber())
-                    .setEntryTime(new Date())
+                    .setEntryTime(LocalDateTime.now())
                     .setType(lotType)
                     .setLotId(assigned.getId())
                     .build();
@@ -159,8 +163,10 @@ public class ParkingLotManager {
         ParkingToken token = getParkingToken(tokenId);
 
         // Calculate payment
-        Date exitTime = new Date();
-        long duration = (exitTime.getTime() - token.getEntryTime().getTime()) / 1000;
+        LocalDateTime exitTime = LocalDateTime.now();
+
+        // duration in minutes.
+         long durationMinutes = ChronoUnit.MINUTES.between(token.getEntryTime(), exitTime);
         ParkingReceipt receipt = null;
 
         synchronized (token) {
@@ -169,13 +175,18 @@ public class ParkingLotManager {
             // Free parking for duration = less than 5 minutes.
             receipt = new ParkingReceipt(token);
             receipt.setExitTime(exitTime);
-            receipt.setDuration(calculateDuration(duration));
-            if (duration < TimeUnit.MINUTES.toSeconds(5)) {
+            long hours = ChronoUnit.HOURS.between(token.getEntryTime(), exitTime);
+            exitTime = exitTime.minusHours(hours);
+            long minutes = ChronoUnit.MINUTES.between(token.getEntryTime(), exitTime);
+            receipt.setDuration(
+                    String.format("%d hour(s) and %d minute(s)", hours, minutes)
+            );
+            if (durationMinutes < 5) {
                 receipt.setMessage(String.format("%s %s", CHECKOUT_MSG_FREE, CHECKOUT_MSG));
             } else {
                 receipt.setMessage(CHECKOUT_MSG);
                 // Proceed for payment
-                double amount = calculatePayment(duration, occupiedLots.get(token));
+                double amount = calculatePayment(durationMinutes, occupiedLots.get(token));
                 receipt.setAmount(amount);
 
                 // Call payment service
@@ -189,21 +200,9 @@ public class ParkingLotManager {
         return receipt;
     }
 
-    private double calculatePayment(long duration, ParkingLot parkingLot) {
-        double charge = 0.0;
-        int numberOfHours = Double.valueOf(Math.ceil(duration*1.0 / 60)).intValue();
+    private double calculatePayment(long durationInMinutes, ParkingLot parkingLot) {
+        int numberOfHours = Double.valueOf(Math.ceil(durationInMinutes*1.0 / 60)).intValue();
         return numberOfHours * parkingLot.getCost();
-    }
-
-    /**
-     * @param duration - Duration in seconds
-     * @return
-     */
-    private String calculateDuration(long duration) {
-        int hours = new Double(duration / 3600).intValue();
-        duration %= 3600;
-        int minutes = new Double(duration / 60).intValue();
-        return String.format("%d hour(s) and %d minute(s)", hours, minutes);
     }
 
     private ParkingToken validate(String tokenId) throws Exception {
@@ -212,12 +211,6 @@ public class ParkingLotManager {
             throw new TokenNotFoundException("Provided token not found in the system!");
         }
         return token;
-    }
-
-    public static void main(String[] args) {
-        long duration = 61;
-        int i = Double.valueOf(Math.ceil(duration*1.0 / 60)).intValue();
-        System.out.println(i);
     }
 
     private List<ParkingLot> getParkingCacheByLotType(ParkingLotType lotType) {
@@ -239,5 +232,14 @@ public class ParkingLotManager {
                 throw new IllegalArgumentException("Wrong Parking Lot Type!");
         }
         return source;
+    }
+
+    public static void main(String[] args) {
+        LocalDateTime date1 = LocalDateTime.of(2022, 12, 22, 10, 3, 10);
+        LocalDateTime date2 = LocalDateTime.now();
+        long hours = ChronoUnit.HOURS.between(date1, date2);
+        date2 = date2.minusHours(hours);
+        long minutes = ChronoUnit.MINUTES.between(date1, date2);
+        System.out.println(String.format("hours: %d, minutes: %d", hours, minutes));
     }
 }
