@@ -9,6 +9,8 @@ import com.goura.system.parkinglot.model.ParkingLot;
 import com.goura.system.parkinglot.model.ParkingLotNumbers;
 import com.goura.system.parkinglot.model.ParkingReceipt;
 import com.goura.system.parkinglot.model.impl.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +27,8 @@ import java.util.stream.IntStream;
 public class ParkingLotManager {
     private static final String CHECKOUT_MSG_FREE = "Free parking for less than 5 minutes!";
     private static final String CHECKOUT_MSG = "Thank You! Please visit again.";
+    private static final Logger logger = LoggerFactory.getLogger(ParkingLotManager.class);
+
     private List<ParkingLot> compactLots, handicappedLots, largeLots, motorcycleLots;
     private Map<ParkingToken, ParkingLot> occupiedLots = new HashMap<>();
     private ParkingLotConfig config;
@@ -34,45 +38,45 @@ public class ParkingLotManager {
     private PaymentService paymentService;
     private final class Capacity {
         private ParkingLotConfig config;
-        private int totalCapacity;
-        private int handicappedCapacity;
-        private int largeCapacity;
-        private int compactCapacity;
-        private int motorcycleCapacity;
+        private int total;
+        private int handicapped;
+        private int large;
+        private int compact;
+        private int motorcycle;
         private Capacity(ParkingLotConfig config) {
             this.config = config;
             init();
         }
 
         private void init() {
-            totalCapacity = config.getCapacity();
-            compactCapacity = totalCapacity;
-            handicappedCapacity = (totalCapacity * config.getHandicappedCapPercent()) / 100;
-            compactCapacity -= handicappedCapacity;
-            largeCapacity = (totalCapacity * config.getLargeCapPercent()) / 100;
-            compactCapacity -= largeCapacity;
-            motorcycleCapacity = (totalCapacity * config.getMotorcycleCapPercent()) / 100;
-            compactCapacity -= motorcycleCapacity;
+            total = config.getCapacity();
+            compact = total;
+            handicapped = (total * config.getHandicappedCapPercent()) / 100;
+            compact -= handicapped;
+            large = (total * config.getLargeCapPercent()) / 100;
+            compact -= large;
+            motorcycle = (total * config.getMotorcycleCapPercent()) / 100;
+            compact -= motorcycle;
         }
 
-        public int getTotalCapacity() {
-            return totalCapacity;
+        public int getTotal() {
+            return total;
         }
 
-        public int getCompactCapacity() {
-            return compactCapacity;
+        public int getCompact() {
+            return compact;
         }
 
-        public int getLargeCapacity() {
-            return largeCapacity;
+        public int getLarge() {
+            return large;
         }
 
-        public int getHandicappedCapacity() {
-            return handicappedCapacity;
+        public int getHandicapped() {
+            return handicapped;
         }
 
-        public int getMotorcycleCapacity() {
-            return motorcycleCapacity;
+        public int getMotorcycle() {
+            return motorcycle;
         }
     }
 
@@ -80,30 +84,51 @@ public class ParkingLotManager {
         this.config = config;
         // Initialize the free lots cache
         capacity = new Capacity(config);
-        compactLots = IntStream.range(0, capacity.compactCapacity)
+        compactLots = IntStream.range(0, capacity.compact)
                 .mapToObj(e -> new CompactParkingLot(config.getCompactLotCost()))
                 .collect(Collectors.toList());
+        logger.info(
+                "{} Compact lots cache initialized with cost: {}",
+                capacity.compact, config.getCompactLotCost()
+        );
 
-        handicappedLots = IntStream.range(0, capacity.handicappedCapacity)
+        handicappedLots = IntStream.range(0, capacity.handicapped)
                 .mapToObj(e -> new HandicappedParkingLot(config.getHandicappedLotCost()))
                 .collect(Collectors.toList());
+        logger.info(
+                "{} Handicapped lots cache initialized with cost: {}",
+                capacity.handicapped, config.getHandicappedLotCost()
+        );
 
-        largeLots = IntStream.range(0, capacity.largeCapacity)
+        largeLots = IntStream.range(0, capacity.large)
                 .mapToObj(e -> new LargeParkingLot(config.getLargeLotCost()))
                 .collect(Collectors.toList());
+        logger.info(
+                "{} Large lots cache initialized with cost: {}",
+                capacity.large, config.getLargeLotCost()
+        );
 
-        motorcycleLots = IntStream.range(0, capacity.motorcycleCapacity)
+        motorcycleLots = IntStream.range(0, capacity.motorcycle)
                 .mapToObj(e -> new MotorcycleParkingLot(config.getMotorcycleLotCost()))
                 .collect(Collectors.toList());
+        logger.info(
+                "{} Motorcycle lots cache initialized with cost: {}",
+                capacity.motorcycle, config.getMotorcycleLotCost()
+        );
+        logger.info("ParkingLotManager initialized with proper config.");
     }
 
     public ParkingLotNumbers getCapacity() {
         ParkingLotNumbers c = new ParkingLotNumbers();
-        c.setTotal(capacity.getTotalCapacity());;
-        c.setLarge(capacity.getLargeCapacity(), config.getLargeLotCost());
-        c.setCompact(capacity.getCompactCapacity(), config.getCompactLotCost());
-        c.setMotorcycle(capacity.getMotorcycleCapacity(), config.getMotorcycleLotCost());
-        c.setHandicapped(capacity.getHandicappedCapacity(), config.getHandicappedLotCost());
+        c.setTotal(capacity.getTotal());;
+        c.setLarge(capacity.getLarge(), config.getLargeLotCost());
+        c.setCompact(capacity.getCompact(), config.getCompactLotCost());
+        c.setMotorcycle(capacity.getMotorcycle(), config.getMotorcycleLotCost());
+        c.setHandicapped(capacity.getHandicapped(), config.getHandicappedLotCost());
+        logger.info(
+                "Total capacity:: Large: {}, Compact: {}, Motorcycle: {}, Handicapped: {}",
+                capacity.getLarge(), capacity.getCompact(), capacity.getMotorcycle(), capacity.getHandicapped()
+        );
         return c;
     }
 
@@ -113,7 +138,11 @@ public class ParkingLotManager {
         n.setCompact(compactLots.size(), config.getCompactLotCost());
         n.setMotorcycle(motorcycleLots.size(), config.getMotorcycleLotCost());
         n.setHandicapped(handicappedLots.size(), config.getHandicappedLotCost());
-        n.setTotal(capacity.getTotalCapacity() - occupiedLots.size());
+        n.setTotal(capacity.getTotal() - occupiedLots.size());
+        logger.info(
+                "Parking lot availability:: Large: {}, Compact: {}, Motorcycle: {}, Handicapped: {}",
+                largeLots.size(), compactLots.size(), motorcycleLots.size(), handicappedLots.size()
+        );
         return n;
     }
 
@@ -129,6 +158,7 @@ public class ParkingLotManager {
     public ParkingToken reserve(CheckinInfo info) throws Exception {
         // Validate vehicleType against ParkingLotType enum values.
         ParkingLotType lotType = null;
+        logger.debug("Checking if the parking lot type \"{}\" is valid.", info.getVehicleType());
         try {
             lotType = ParkingLotType.valueOf(info.getVehicleType());
         } catch (IllegalArgumentException e) {
@@ -139,6 +169,7 @@ public class ParkingLotManager {
                                     .collect(Collectors.joining(", "))
             );
         };
+        logger.debug("Parking lot type is valid.");
         List<ParkingLot> source = getParkingCacheByLotType(lotType);
         ParkingToken token = null;
         synchronized (source) {
@@ -155,6 +186,7 @@ public class ParkingLotManager {
                     .build();
             occupiedLots.put(token, assigned);
         }
+        logger.info("Parking lot[{}] reserved. Token id: {}", token.getLotId(), token.getTokenId());
         return token;
     }
 

@@ -9,6 +9,8 @@ import com.goura.system.parkinglot.model.CheckinInfo;
 import com.goura.system.parkinglot.model.ParkingLot;
 import com.goura.system.parkinglot.model.ParkingLotNumbers;
 import com.goura.system.parkinglot.model.ParkingReceipt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,8 @@ import javax.validation.constraints.NotNull;
 @RestController
 @Validated
 public class ParkingLotController {
+    private static final Logger logger = LoggerFactory.getLogger(ParkingLotController.class);
+
     @Autowired
     private ParkingLotManager manager;
 
@@ -82,7 +86,6 @@ public class ParkingLotController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity handleDefaultException(Exception e) {
-        e.printStackTrace(System.err);
         return new ResponseEntity<>("Internal Server Error!", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
