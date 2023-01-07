@@ -13,7 +13,7 @@ public class ParkingLotNumbers {
     private ParkingLotNumber compact;
     private ParkingLotNumber motorcycle;
 
-    private final class ParkingLotNumber {
+    public final class ParkingLotNumber {
         private int count;
         @JsonFormat(pattern = "")
         private String cost;

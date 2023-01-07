@@ -126,8 +126,9 @@ public class ParkingLotManager {
         c.setMotorcycle(capacity.getMotorcycle(), config.getMotorcycleLotCost());
         c.setHandicapped(capacity.getHandicapped(), config.getHandicappedLotCost());
         logger.info(
-                "Total capacity:: Large: {}, Compact: {}, Motorcycle: {}, Handicapped: {}",
-                capacity.getLarge(), capacity.getCompact(), capacity.getMotorcycle(), capacity.getHandicapped()
+                "Capacity:: Total: {}, Large: {}, Compact: {}, Motorcycle: {}, Handicapped: {}",
+                capacity.getTotal(), capacity.getLarge(), capacity.getCompact(),
+                capacity.getMotorcycle(), capacity.getHandicapped()
         );
         return c;
     }
@@ -174,7 +175,8 @@ public class ParkingLotManager {
         ParkingToken token = null;
         synchronized (source) {
             if (source.isEmpty()) {
-                throw new NotAvailableException("No parking Lot available for your vehicle type");
+                throw new NotAvailableException("No parking Lot available for vehicle type[" +
+                        lotType + "].");
             }
             ParkingLot assigned = source.remove(0);
             token = ParkingTokenBuilder.create()

@@ -1,8 +1,12 @@
 package com.goura.system.parkinglot.config;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
 public class ParkingLotConfig {
     private interface Default {
-        int CAPACITY = 20000;
+        int CAPACITY = 20;
 
         // Percentage occupancy
         int HANDICAPPED_CAP_PERCENT = 5;
@@ -16,17 +20,26 @@ public class ParkingLotConfig {
         double LARGE_LOT_COST = 5.00;
     }
 
-    private static final ParkingLotConfig INSTANCE = new ParkingLotConfig();
+    @Value("${capacity.total}")
     private int capacity;
-    private int handicappedCapPercent;
-    private int motorcycleCapPercent;
+    @Value("${capacity.percent.large}")
     private int largeCapPercent;
-    private double compactLotCost;
-    private double handicappedLotCost;
-    private double motorcycleLotCost;
-    private double largeLotCost;
+    @Value("${capacity.percent.motorcycle}")
+    private int motorcycleCapPercent;
+    @Value("${capacity.percent.handicapped}")
+    private int handicappedCapPercent;
 
-    private ParkingLotConfig() {
+    @Value("${parking.cost.large}")
+    private double largeLotCost;
+    @Value("${parking.cost.compact}")
+    private double compactLotCost;
+    @Value("${parking.cost.motorcycle}")
+    private double motorcycleLotCost;
+    @Value("${parking.cost.handicapped}")
+    private double handicappedLotCost;
+
+    public ParkingLotConfig() {
+        // Initialize with default values.
         this.capacity = Default.CAPACITY;
 
         this.handicappedCapPercent = Default.HANDICAPPED_CAP_PERCENT;
@@ -39,8 +52,9 @@ public class ParkingLotConfig {
         this.motorcycleLotCost = Default.MOTORCYCLE_LOT_COST;
     }
 
-    public static ParkingLotConfig getInstance() {
-        return INSTANCE;
+    public void setCapacity(int capacity) {
+        System.out.println("Capacity: " + capacity);
+        this.capacity = capacity;
     }
 
     public int getCapacity() {

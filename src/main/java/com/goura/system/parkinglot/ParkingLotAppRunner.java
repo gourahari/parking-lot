@@ -12,11 +12,11 @@ public class ParkingLotAppRunner implements CommandLineRunner {
     @Autowired
     private ParkingLotManager manager;
 
+    @Autowired
+    private ParkingLotConfig config;
+
     @Override
     public void run(String... args) throws Exception {
-        // Initialize the config object;
-        ParkingLotConfig config = ParkingLotConfig.getInstance();
-
         // Initialize the parking lot manager
         manager.initialize(config);
     }

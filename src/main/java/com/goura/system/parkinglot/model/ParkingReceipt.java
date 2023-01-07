@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.goura.system.parkinglot.core.ParkingToken;
 
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -18,7 +19,7 @@ public class ParkingReceipt {
     private LocalDateTime exitTime;
     private String duration;
     private String message;
-    private double amount;
+    private String amount;
     private String txnId;
 
     public ParkingReceipt(ParkingToken token) {
@@ -76,12 +77,12 @@ public class ParkingReceipt {
         this.message = message;
     }
 
-    public double getAmount() {
+    public String getAmount() {
         return amount;
     }
 
     public void setAmount(double amount) {
-        this.amount = amount;
+        this.amount = NumberFormat.getCurrencyInstance().format(amount);
     }
 
     public String getTxnId() {
